@@ -3,13 +3,12 @@
   "$id": "https://aleksandrsoloviev.github.io/job_searching/data/companies.schema.json",
   "title": "Каталог целевых компаний",
   "type": "object",
-  "additionalProperties": true,
+  "additionalProperties": false,
   "required": ["schemaVersion", "companies"],
   "properties": {
     "schemaVersion": {
       "type": "string",
-      "minLength": 1,
-      "description": "Версия схемы. Несовместимая мажорная версия отклоняется."
+      "minLength": 1
     },
     "companies": {
       "type": "array",
@@ -19,14 +18,18 @@
   "$defs": {
     "company": {
       "type": "object",
-      "additionalProperties": true,
+      "additionalProperties": false,
       "required": ["id", "name"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "name": { "type": "string", "minLength": 1 },
         "website": { "type": "string" },
         "email": { "type": "string" },
-        "coverLetter": { "type": "string" },
+        "coverLetter": {
+          "type": "string",
+          "description": "Пустая строка или конверт enc.v1. Значение ключа расшифровки в схеме не приводится.",
+          "pattern": "^$|^enc\\.v1\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$"
+        },
         "vacancies": {
           "type": "array",
           "items": { "$ref": "#/$defs/vacancy" }
@@ -37,7 +40,7 @@
     },
     "vacancy": {
       "type": "object",
-      "additionalProperties": true,
+      "additionalProperties": false,
       "required": ["id", "title", "url"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },

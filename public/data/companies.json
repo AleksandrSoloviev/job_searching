@@ -1,4 +1,26 @@
 {
   "schemaVersion": "1.0.0",
-  "companies": []
+  "companies": [
+    {
+      "id": "acme",
+      "name": "Acme",
+      "website": "https://acme.example",
+      "email": "jobs@acme.example",
+      "coverLetter": "",
+      "vacancies": [
+        {
+          "id": "fe-1",
+          "title": "Frontend Engineer",
+          "url": "https://acme.example/jobs/fe-1",
+          "summary": "React TypeScript"
+        },
+        {
+          "id": "be-1",
+          "title": "Backend Engineer",
+          "url": "https://acme.example/jobs/be-1",
+          "summary": "Java Spring"
+        }
+      ]
+    }
+  ]
 }

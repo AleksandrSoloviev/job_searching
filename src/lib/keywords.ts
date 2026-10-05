@@ -1,0 +1,18 @@
+export const BUILTIN_FRONTEND_KEYWORDS = [
+  'frontend',
+  'front-end',
+  'фронтенд',
+  'react',
+  'typescript',
+  'javascript',
+  'js',
+  'ts',
+  'html',
+  'css',
+  'next.js',
+  'nextjs',
+  'vue',
+  'angular',
+  'svelte',
+  'tailwind',
+] as const
