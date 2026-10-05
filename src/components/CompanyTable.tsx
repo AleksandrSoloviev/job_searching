@@ -3,20 +3,19 @@ import type { Company } from '@/lib/schema'
 
 type CompanyTableProps = {
   companies: Company[]
-  selectedId: string | null
-  onSelect: (companyId: string) => void
+  highlightedId: string | null
+  onOpenDetails: (companyId: string) => void
   onMarkApplied: (companyId: string, vacancyId: string) => void
 }
 
-const coverLetterHint = (coverLetter: string): string => {
-  const trimmed = coverLetter.trim()
-  return trimmed === '' ? 'Сопроводительное письмо не задано' : trimmed
+const stopRowClick = (event: { stopPropagation: () => void }): void => {
+  event.stopPropagation()
 }
 
 export const CompanyTable = ({
   companies,
-  selectedId,
-  onSelect,
+  highlightedId,
+  onOpenDetails,
   onMarkApplied,
 }: CompanyTableProps) => {
   return (
@@ -32,8 +31,8 @@ export const CompanyTable = ({
         <div className="overflow-visible rounded-md border border-slate-200 bg-white">
           <table className="min-w-full border-collapse text-left text-sm">
             <caption className="sr-only">
-              Компании: имя открывает карточку, сайт и почта — ссылки, вакансии
-              — адреса страниц. Письмо в подсказке строки.
+              Компании: клик по строке или имени открывает сведения. Сайт, почта
+              и вакансии — ссылки. «Отметка о подаче» сразу сохраняет дату.
             </caption>
             <thead className="bg-slate-100 text-slate-700">
               <tr>
@@ -53,44 +52,35 @@ export const CompanyTable = ({
             </thead>
             <tbody>
               {companies.map((company) => {
-                const isSelected = company.id === selectedId
-                const letterHint = coverLetterHint(company.coverLetter)
-                const letterId = `company-letter-${company.id}`
+                const isHighlighted = company.id === highlightedId
                 const website = company.website?.trim() ?? ''
                 const email = company.email?.trim() ?? ''
 
                 return (
                   <tr
                     key={company.id}
-                    title={letterHint}
-                    aria-describedby={letterId}
+                    onClick={() => {
+                      onOpenDetails(company.id)
+                    }}
                     className={
-                      isSelected
-                        ? 'group relative border-t border-slate-200 bg-slate-100'
-                        : 'group relative border-t border-slate-200 hover:bg-slate-50'
+                      isHighlighted
+                        ? 'cursor-pointer border-t border-slate-200 bg-slate-100 hover:bg-slate-100'
+                        : 'cursor-pointer border-t border-slate-200 hover:bg-slate-50'
                     }
                   >
                     <td className="px-3 py-2 align-top">
                       <button
                         type="button"
-                        onClick={() => {
-                          onSelect(company.id)
+                        onClick={(event) => {
+                          stopRowClick(event)
+                          onOpenDetails(company.id)
                         }}
-                        title={letterHint}
-                        aria-current={isSelected ? 'true' : undefined}
-                        aria-describedby={letterId}
-                        aria-label={`Открыть карточку компании ${company.name}`}
+                        aria-haspopup="dialog"
+                        aria-label={`Открыть сведения о компании ${company.name}`}
                         className="rounded text-left font-medium text-slate-900 underline decoration-slate-300 underline-offset-2 hover:decoration-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
                       >
                         {company.name}
                       </button>
-                      <span
-                        id={letterId}
-                        role="tooltip"
-                        className="pointer-events-none absolute left-3 top-full z-20 hidden max-w-md -translate-y-1 rounded bg-slate-900 px-3 py-2 text-xs whitespace-pre-wrap text-white shadow-lg group-hover:block group-focus-within:block"
-                      >
-                        {letterHint}
-                      </span>
                     </td>
                     <td className="px-3 py-2 align-top">
                       {website !== '' && isVacancyLink(website) ? (
@@ -98,7 +88,7 @@ export const CompanyTable = ({
                           href={website}
                           target="_blank"
                           rel="noreferrer"
-                          title={letterHint}
+                          onClick={stopRowClick}
                           className="break-all text-slate-900 underline hover:text-slate-600"
                         >
                           {website}
@@ -111,7 +101,7 @@ export const CompanyTable = ({
                       {email !== '' ? (
                         <a
                           href={`mailto:${email}`}
-                          title={letterHint}
+                          onClick={stopRowClick}
                           className="break-all text-slate-900 underline hover:text-slate-600"
                         >
                           {email}
@@ -140,7 +130,7 @@ export const CompanyTable = ({
                                     href={vacancy.url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    title={letterHint}
+                                    onClick={stopRowClick}
                                     className="text-slate-900 underline hover:text-slate-600"
                                   >
                                     {vacancy.title}
@@ -148,20 +138,13 @@ export const CompanyTable = ({
                                 ) : (
                                   <span>{vacancy.title}</span>
                                 )}
-                                <button
-                                  type="button"
-                                  title={appliedLabel}
-                                  onClick={() => {
-                                    onSelect(company.id)
-                                  }}
-                                  aria-label={`${appliedLabel} по вакансии ${vacancy.title}. Открыть карточку`}
-                                  className="rounded text-xs font-medium text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
-                                >
+                                <span className="text-xs font-medium text-slate-700">
                                   {appliedLabel}
-                                </button>
+                                </span>
                                 <button
                                   type="button"
-                                  onClick={() => {
+                                  onClick={(event) => {
+                                    stopRowClick(event)
                                     onMarkApplied(company.id, vacancy.id)
                                   }}
                                   aria-label={`Отметка о подаче на ${vacancy.title}`}

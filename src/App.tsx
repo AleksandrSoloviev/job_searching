@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CatalogTransfer } from '@/components/CatalogTransfer'
+import { CompanyDetailsModal } from '@/components/CompanyDetailsModal'
 import { CompanyForm } from '@/components/CompanyForm'
 import { CompanyList } from '@/components/CompanyList'
 import { CompanyTable } from '@/components/CompanyTable'
@@ -31,6 +32,7 @@ const downloadJson = (filename: string, payload: unknown): void => {
 export const App = () => {
   const [catalog, setCatalog] = useState<Catalog | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [previewId, setPreviewId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
   const [isFilterEnabled, setIsFilterEnabled] = useState(false)
@@ -52,10 +54,31 @@ export const App = () => {
 
   const selectedCompany =
     catalog?.companies.find((company) => company.id === selectedId) ?? null
+  const previewCompany =
+    catalog?.companies.find((company) => company.id === previewId) ?? null
 
   const handleSelectCompany = (companyId: string): void => {
+    setPreviewId(null)
     setSelectedId(companyId)
     setIsCreating(false)
+  }
+
+  const handleOpenDetails = (companyId: string): void => {
+    setPreviewId(companyId)
+  }
+
+  const handleCloseDetails = (): void => {
+    setPreviewId(null)
+  }
+
+  const handleEditFromDetails = (): void => {
+    if (!previewId) {
+      return
+    }
+
+    setSelectedId(previewId)
+    setIsCreating(false)
+    setPreviewId(null)
   }
 
   const handlePersist = async (next: Catalog): Promise<void> => {
@@ -120,6 +143,9 @@ export const App = () => {
         setSelectedId(null)
         setIsCreating(false)
       }
+      if (previewId === companyId) {
+        setPreviewId(null)
+      }
       setStatus('Компания удалена')
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Не удалось удалить')
@@ -134,6 +160,7 @@ export const App = () => {
       await handlePersist(imported)
       setSelectedId(null)
       setIsCreating(false)
+      setPreviewId(null)
       setStatus('Импорт выполнен')
     } catch {
       setStatus('Файл не принят. Рабочая копия не изменена.')
@@ -160,6 +187,7 @@ export const App = () => {
       setCatalog(seed)
       setSelectedId(null)
       setIsCreating(false)
+      setPreviewId(null)
       setStatus('Рабочая копия заменена файлом сайта')
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Не удалось сбросить')
@@ -182,8 +210,8 @@ export const App = () => {
           <>
             <CompanyTable
               companies={catalog.companies}
-              selectedId={selectedId}
-              onSelect={handleSelectCompany}
+              highlightedId={previewId ?? selectedId}
+              onOpenDetails={handleOpenDetails}
               onMarkApplied={(companyId, vacancyId) => {
                 void handleMarkApplied(companyId, vacancyId)
               }}
@@ -195,6 +223,7 @@ export const App = () => {
                   selectedId={selectedId}
                   onSelect={handleSelectCompany}
                   onCreate={() => {
+                    setPreviewId(null)
                     setSelectedId(null)
                     setIsCreating(true)
                   }}
@@ -253,6 +282,13 @@ export const App = () => {
                 )}
               </div>
             </div>
+            {previewCompany ? (
+              <CompanyDetailsModal
+                company={previewCompany}
+                onClose={handleCloseDetails}
+                onEdit={handleEditFromDetails}
+              />
+            ) : null}
           </>
         ) : (
           <p className="text-sm text-slate-600">Загрузка…</p>

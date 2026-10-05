@@ -184,6 +184,12 @@
 
 ---
 
+## Phase 12: Модалка сведений вместо тултипа
+
+- [X] T046 Убрать тултип письма; клик по строке открывает `src/components/CompanyDetailsModal.tsx` (Escape, закрыть, фокус); «Редактировать» открывает `CompanyForm`; ссылки и «Отметка о подаче» не открывают модалку
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

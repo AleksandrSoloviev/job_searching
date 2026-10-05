@@ -45,13 +45,66 @@ describe('App', () => {
         screen.getByRole('button', { name: 'Открыть компанию Acme' }),
       ).toBeInTheDocument()
       expect(
-        screen.getByRole('button', { name: 'Открыть карточку компании Acme' }),
+        screen.getByRole('button', {
+          name: 'Открыть сведения о компании Acme',
+        }),
+      ).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Открыть компанию Acme' }))
+    expect(screen.getByLabelText('Имя')).toHaveValue('Acme')
+  })
+
+  it('открывает модалку по строке таблицы и редактирование из неё', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          schemaVersion: '1.0.0',
+          companies: [
+            {
+              id: 'acme',
+              name: 'Acme',
+              website: 'https://acme.example',
+              email: 'jobs@acme.example',
+              coverLetter: 'Письмо для Acme',
+              vacancies: [
+                {
+                  id: 'fe-1',
+                  title: 'Frontend Engineer',
+                  url: 'https://acme.example/jobs/fe-1',
+                  lastAppliedAt: '2026-10-01',
+                },
+              ],
+            },
+          ],
+        }),
+      }),
+    )
+
+    render(<App />)
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', {
+          name: 'Открыть сведения о компании Acme',
+        }),
       ).toBeInTheDocument()
     })
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'Открыть карточку компании Acme' }),
+      screen.getByRole('button', {
+        name: 'Открыть сведения о компании Acme',
+      }),
     )
+
+    const dialog = await screen.findByRole('dialog', { name: 'Acme' })
+    expect(dialog).toHaveTextContent('Письмо для Acme')
+    expect(screen.queryByLabelText('Имя')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Редактировать' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Имя')).toHaveValue('Acme')
   })
 
@@ -117,5 +170,6 @@ describe('App', () => {
       screen.getByText('Выберите компанию или добавьте новую.'),
     ).toBeInTheDocument()
     expect(screen.queryByLabelText('Имя')).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })
