@@ -84,7 +84,7 @@ src/
 │   ├── schema.ts          # одна Zod-схема файла и рабочей копии
 │   ├── storage.ts         # IndexedDB, только каталог
 │   ├── catalog.ts         # сид, CRUD, импорт/экспорт, сброс к файлу сайта
-│   ├── keywords.ts        # только BUILTIN_FRONTEND_KEYWORDS
+│   ├── keywords.ts        # BUILTIN_FRONTEND_KEYWORDS + исключение React Native
 │   └── vacancies.ts       # клиентский фильтр по встроенному набору
 ├── components/
 │   ├── CompanyTable.tsx   # обзор: имя/сайт/email/вакансии; письмо в tooltip

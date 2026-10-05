@@ -2,11 +2,28 @@
   "schemaVersion": "1.0.0",
   "companies": [
     {
+      "id": "zebra",
+      "name": "Zebra",
+      "website": "https://zebra.example",
+      "email": "jobs@zebra.example",
+      "coverLetter": "Здравствуйте, команда Zebra.",
+      "vacancies": [
+        {
+          "id": "fe-z",
+          "title": "Frontend Engineer",
+          "url": "https://zebra.example/jobs/fe-z",
+          "summary": "Vue",
+          "lastAppliedAt": ""
+        }
+      ]
+    },
+    {
       "id": "acme",
       "name": "Acme",
       "website": "https://acme.example",
       "email": "jobs@acme.example",
       "coverLetter": "Здравствуйте, команда Acme. Меня интересует роль Frontend Engineer.",
+      "fameRank": 1,
       "vacancies": [
         {
           "id": "fe-1",
@@ -20,6 +37,30 @@
           "title": "Backend Engineer",
           "url": "https://acme.example/jobs/be-1",
           "summary": "Java Spring",
+          "lastAppliedAt": ""
+        },
+        {
+          "id": "rn-1",
+          "title": "React Native Engineer",
+          "url": "https://acme.example/jobs/rn-1",
+          "summary": "iOS Android RN",
+          "lastAppliedAt": ""
+        }
+      ]
+    },
+    {
+      "id": "northwind",
+      "name": "Northwind",
+      "website": "https://northwind.example",
+      "email": "jobs@northwind.example",
+      "coverLetter": "Здравствуйте, команда Northwind.",
+      "fameRank": 10,
+      "vacancies": [
+        {
+          "id": "fe-n",
+          "title": "Frontend Developer",
+          "url": "https://northwind.example/jobs/fe-n",
+          "summary": "JavaScript",
           "lastAppliedAt": ""
         }
       ]

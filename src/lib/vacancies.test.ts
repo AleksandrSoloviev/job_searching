@@ -16,18 +16,31 @@ describe('filterVacancies', () => {
     vacancy('2', 'Backend Engineer', 'Java Spring'),
     vacancy('3', 'QA', 'mobile'),
     vacancy('4', 'Разработчик', 'фронтенд'),
+    vacancy('5', 'React Native Engineer'),
+    vacancy('6', 'Mobile Developer', 'react-native'),
+    vacancy('7', 'Senior RN Engineer', 'TypeScript'),
+    vacancy('8', 'Frontend Intern', 'React TypeScript'),
   ]
 
-  it('без фильтра возвращает весь список', () => {
-    expect(filterVacancies(list, false)).toHaveLength(4)
-    expect(list).toHaveLength(4)
+  it('без фильтра возвращает весь список, включая React Native', () => {
+    expect(filterVacancies(list, false)).toHaveLength(8)
+    expect(list).toHaveLength(8)
   })
 
-  it('с фильтром оставляет совпадения по встроенному набору', () => {
+  it('с фильтром оставляет фронтенд и скрывает React Native / RN', () => {
     const filtered = filterVacancies(list, true)
 
-    expect(filtered.map((item) => item.id)).toEqual(['1', '4'])
-    expect(list.map((item) => item.id)).toEqual(['1', '2', '3', '4'])
+    expect(filtered.map((item) => item.id)).toEqual(['1', '4', '8'])
+    expect(list.map((item) => item.id)).toEqual([
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+    ])
   })
 
   it('пустой результат фильтра не чистит исходные данные', () => {

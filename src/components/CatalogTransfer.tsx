@@ -22,8 +22,9 @@ export const CatalogTransfer = ({
         ничего не синхронизируется.
       </p>
       <p className="text-sm text-slate-600">
-        GrokBot пишет тот же JSON: имя, сайт, email, письмо и вакансии обычными
-        строками.
+        GrokBot пишет плоский JSON компаний. Каждый успешный импорт — новая
+        страница, без слияния с уже открытыми. Экспорт сохраняет все страницы.
+        Сброс оставляет только файл сайта как страницу 1.
       </p>
       <div className="flex flex-wrap gap-2">
         <label className="rounded border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50">

@@ -172,4 +172,99 @@ describe('App', () => {
     expect(screen.queryByLabelText('Имя')).not.toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
+
+  it('сортирует таблицу и список: известные выше, без fameRank — в конец', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          schemaVersion: '1.0.0',
+          companies: [
+            { id: 'zebra', name: 'Zebra' },
+            { id: 'acme', name: 'Acme', fameRank: 1 },
+            { id: 'northwind', name: 'Northwind', fameRank: 10 },
+          ],
+        }),
+      }),
+    )
+
+    render(<App />)
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Открыть компанию Acme' }),
+      ).toBeInTheDocument()
+    })
+
+    const listButtons = screen
+      .getAllByRole('button', { name: /Открыть компанию / })
+      .map((button) => button.textContent)
+    const tableButtons = screen
+      .getAllByRole('button', { name: /Открыть сведения о компании / })
+      .map((button) => button.textContent)
+
+    expect(listButtons).toEqual(['Acme', 'Northwind', 'Zebra'])
+    expect(tableButtons).toEqual(['Acme', 'Northwind', 'Zebra'])
+    expect(screen.getByText('Страница 1 из 1 · 3 компании')).toBeInTheDocument()
+  })
+
+  it('импорт JSON открывает новую страницу, не смешивая компании', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          schemaVersion: '1.0.0',
+          companies: [{ id: 'acme', name: 'Acme', fameRank: 1 }],
+        }),
+      }),
+    )
+
+    render(<App />)
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Открыть компанию Acme' }),
+      ).toBeInTheDocument()
+    })
+
+    const file = new File(
+      [
+        JSON.stringify({
+          schemaVersion: '1.0.0',
+          companies: [{ id: 'beta', name: 'Beta' }],
+        }),
+      ],
+      'batch.json',
+      { type: 'application/json' },
+    )
+    const input = screen.getByLabelText('Импортировать JSON')
+    fireEvent.change(input, { target: { files: [file] } })
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Импорт выполнен. Открыта страница 2 из 2/),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: 'Открыть компанию Beta' }),
+      ).toBeInTheDocument()
+    })
+
+    expect(
+      screen.queryByRole('button', { name: 'Открыть компанию Acme' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText('Страница 2 из 2 · 1 компания')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Страница 1' }))
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Открыть компанию Acme' }),
+      ).toBeInTheDocument()
+    })
+    expect(
+      screen.queryByRole('button', { name: 'Открыть компанию Beta' }),
+    ).not.toBeInTheDocument()
+  })
 })

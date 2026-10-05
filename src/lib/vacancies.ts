@@ -1,4 +1,7 @@
-import { BUILTIN_FRONTEND_KEYWORDS } from '@/lib/keywords'
+import {
+  BUILTIN_FRONTEND_KEYWORDS,
+  isReactNativeRole,
+} from '@/lib/keywords'
 import type { Vacancy } from '@/lib/schema'
 
 export const vacancyMatchesKeywords = (
@@ -18,8 +21,10 @@ export const filterVacancies = (
     return vacancies
   }
 
-  return vacancies.filter((vacancy) =>
-    vacancyMatchesKeywords(vacancy, BUILTIN_FRONTEND_KEYWORDS),
+  return vacancies.filter(
+    (vacancy) =>
+      vacancyMatchesKeywords(vacancy, BUILTIN_FRONTEND_KEYWORDS) &&
+      !isReactNativeRole(vacancy.title, vacancy.summary ?? ''),
   )
 }
 

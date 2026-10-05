@@ -70,4 +70,24 @@ describe('CompanyForm', () => {
       }),
     )
   })
+
+  it('сохраняет fameRank из формы', () => {
+    const handleSave = vi.fn()
+    render(
+      <CompanyForm
+        company={{ ...acme, fameRank: 3 }}
+        onSave={handleSave}
+      />,
+    )
+
+    const rankField = screen.getByLabelText('Ранг известности')
+    expect(rankField).toHaveValue('3')
+
+    fireEvent.change(rankField, { target: { value: '1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Сохранить' }))
+
+    expect(handleSave).toHaveBeenCalledWith(
+      expect.objectContaining({ fameRank: 1 }),
+    )
+  })
 })

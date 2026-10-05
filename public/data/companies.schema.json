@@ -4,7 +4,11 @@
   "title": "Каталог целевых компаний",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "companies"],
+  "required": ["schemaVersion"],
+  "anyOf": [
+    { "required": ["companies"] },
+    { "required": ["pages"] }
+  ],
   "properties": {
     "schemaVersion": {
       "type": "string",
@@ -12,10 +16,33 @@
     },
     "companies": {
       "type": "array",
+      "description": "Плоский снимок. При загрузке старой копии или сида становится одной страницей. При импорте в уже открытый каталог — новая страница.",
       "items": { "$ref": "#/$defs/company" }
+    },
+    "pages": {
+      "type": "array",
+      "description": "Батчи компаний. Экспорт приложения пишет страницы целиком.",
+      "items": { "$ref": "#/$defs/page" }
+    },
+    "activePageIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Индекс открытой страницы. Необязателен; при загрузке ограничивается числом страниц."
     }
   },
   "$defs": {
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "companies"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "companies": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/company" }
+        }
+      }
+    },
     "company": {
       "type": "object",
       "additionalProperties": false,
@@ -28,6 +55,10 @@
         "coverLetter": {
           "type": "string",
           "description": "Сопроводительное письмо обычной строкой. Пустая строка допустима."
+        },
+        "fameRank": {
+          "type": "number",
+          "description": "Меньше — известнее, выше в таблице и списке текущей страницы. Нет поля — в конец. GrokBot MAY задавать."
         },
         "vacancies": {
           "type": "array",

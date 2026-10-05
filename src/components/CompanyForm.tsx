@@ -18,6 +18,7 @@ type Draft = {
   website: string
   email: string
   coverLetter: string
+  fameRank: string
   vacancyTitle: string
   vacancyUrl: string
   vacancies: Vacancy[]
@@ -27,6 +28,7 @@ type FieldErrors = {
   name?: string
   website?: string
   email?: string
+  fameRank?: string
   vacancy?: string
 }
 
@@ -35,6 +37,8 @@ const toDraft = (company: Company | null): Draft => ({
   website: company?.website ?? '',
   email: company?.email ?? '',
   coverLetter: company?.coverLetter ?? '',
+  fameRank:
+    typeof company?.fameRank === 'number' ? String(company.fameRank) : '',
   vacancyTitle: '',
   vacancyUrl: '',
   vacancies: company?.vacancies ?? [],
@@ -106,13 +110,29 @@ export const CompanyForm = ({ company, onSave }: CompanyFormProps) => {
       ]
     }
 
+    const fameRankRaw = draft.fameRank.trim()
+    let fameRank: number | undefined
+
+    if (fameRankRaw !== '') {
+      const parsedRank = Number(fameRankRaw)
+
+      if (!Number.isFinite(parsedRank)) {
+        setErrors({ fameRank: 'Ранг известности должен быть числом' })
+        return
+      }
+
+      fameRank = parsedRank
+    }
+
     const parsed = workingCompanySchema.safeParse({
       id: company?.id ?? createCompanyId(),
       name: draft.name.trim(),
       website: draft.website.trim(),
       email: draft.email.trim(),
       coverLetter: draft.coverLetter,
+      fameRank,
       vacancies,
+      vacanciesSource: company?.vacanciesSource,
       updatedAt: new Date().toISOString(),
     })
 
@@ -132,6 +152,10 @@ export const CompanyForm = ({ company, onSave }: CompanyFormProps) => {
 
         if (field === 'email') {
           nextErrors.email = 'Email должен быть корректным или пустым'
+        }
+
+        if (field === 'fameRank') {
+          nextErrors.fameRank = 'Ранг известности должен быть числом'
         }
       }
 
@@ -211,6 +235,31 @@ export const CompanyForm = ({ company, onSave }: CompanyFormProps) => {
         {errors.email ? (
           <p role="alert" className="text-sm text-red-700">
             {errors.email}
+          </p>
+        ) : null}
+      </div>
+      <div className="space-y-1">
+        <label htmlFor="company-fame-rank" className="text-sm font-medium">
+          Ранг известности
+        </label>
+        <input
+          id="company-fame-rank"
+          inputMode="numeric"
+          value={draft.fameRank}
+          onChange={(event) => {
+            setDraft({ ...draft, fameRank: event.target.value })
+          }}
+          aria-invalid={errors.fameRank ? true : undefined}
+          aria-describedby="company-fame-rank-hint"
+          className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+        />
+        <p id="company-fame-rank-hint" className="text-xs text-slate-500">
+          Меньше — компания известнее и выше в таблице и списке. Пусто — в
+          конец.
+        </p>
+        {errors.fameRank ? (
+          <p role="alert" className="text-sm text-red-700">
+            {errors.fameRank}
           </p>
         ) : null}
       </div>

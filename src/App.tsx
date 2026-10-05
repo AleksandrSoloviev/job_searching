@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { CatalogPager } from '@/components/CatalogPager'
 import { CatalogTransfer } from '@/components/CatalogTransfer'
 import { CompanyDetailsModal } from '@/components/CompanyDetailsModal'
 import { CompanyForm } from '@/components/CompanyForm'
@@ -6,7 +7,7 @@ import { CompanyList } from '@/components/CompanyList'
 import { CompanyTable } from '@/components/CompanyTable'
 import { VacancyList } from '@/components/VacancyList'
 import {
-  importFileCatalog,
+  appendImportToCatalog,
   loadWorkingCatalog,
   markVacancyAppliedToday,
   persistCatalog,
@@ -15,7 +16,13 @@ import {
   toFileCatalog,
   upsertCompany,
 } from '@/lib/catalog'
-import type { Catalog, Company } from '@/lib/schema'
+import { sortCompaniesByFame } from '@/lib/companies'
+import {
+  getActiveCompanies,
+  setActivePageIndex,
+  type Catalog,
+  type Company,
+} from '@/lib/schema'
 
 const downloadJson = (filename: string, payload: unknown): void => {
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
@@ -52,10 +59,12 @@ export const App = () => {
     void load()
   }, [])
 
+  const activeCompanies = catalog ? getActiveCompanies(catalog) : []
+  const sortedCompanies = sortCompaniesByFame(activeCompanies)
   const selectedCompany =
-    catalog?.companies.find((company) => company.id === selectedId) ?? null
+    activeCompanies.find((company) => company.id === selectedId) ?? null
   const previewCompany =
-    catalog?.companies.find((company) => company.id === previewId) ?? null
+    activeCompanies.find((company) => company.id === previewId) ?? null
 
   const handleSelectCompany = (companyId: string): void => {
     setPreviewId(null)
@@ -128,7 +137,7 @@ export const App = () => {
       return
     }
 
-    const company = catalog.companies.find((item) => item.id === companyId)
+    const company = activeCompanies.find((item) => item.id === companyId)
     const confirmed = window.confirm(
       `Удалить компанию «${company?.name ?? companyId}»?`,
     )
@@ -153,15 +162,21 @@ export const App = () => {
   }
 
   const handleImportFile = async (file: File): Promise<void> => {
+    if (!catalog) {
+      return
+    }
+
     try {
       const text = await file.text()
       const data: unknown = JSON.parse(text)
-      const imported = importFileCatalog(data)
+      const imported = appendImportToCatalog(catalog, data)
       await handlePersist(imported)
       setSelectedId(null)
       setIsCreating(false)
       setPreviewId(null)
-      setStatus('Импорт выполнен')
+      setStatus(
+        `Импорт выполнен. Открыта страница ${imported.activePageIndex + 1} из ${imported.pages.length}.`,
+      )
     } catch {
       setStatus('Файл не принят. Рабочая копия не изменена.')
     }
@@ -175,7 +190,7 @@ export const App = () => {
     try {
       const fileCatalog = toFileCatalog(catalog)
       downloadJson('companies.json', fileCatalog)
-      setStatus('Экспорт готов')
+      setStatus('Экспорт готов: все страницы каталога.')
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Не удалось экспортировать')
     }
@@ -188,10 +203,23 @@ export const App = () => {
       setSelectedId(null)
       setIsCreating(false)
       setPreviewId(null)
-      setStatus('Рабочая копия заменена файлом сайта')
+      setStatus('Рабочая копия заменена файлом сайта как страницей 1.')
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Не удалось сбросить')
     }
+  }
+
+  const handlePageChange = (pageIndex: number): void => {
+    if (!catalog) {
+      return
+    }
+
+    const next = setActivePageIndex(catalog, pageIndex)
+    void handlePersist(next)
+    setSelectedId(null)
+    setIsCreating(false)
+    setPreviewId(null)
+    setStatus(null)
   }
 
   return (
@@ -208,8 +236,14 @@ export const App = () => {
       <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8">
         {catalog ? (
           <>
+            <CatalogPager
+              pageCount={catalog.pages.length}
+              pageIndex={catalog.activePageIndex}
+              companyCount={activeCompanies.length}
+              onPageChange={handlePageChange}
+            />
             <CompanyTable
-              companies={catalog.companies}
+              companies={sortedCompanies}
               highlightedId={previewId ?? selectedId}
               onOpenDetails={handleOpenDetails}
               onMarkApplied={(companyId, vacancyId) => {
@@ -219,7 +253,7 @@ export const App = () => {
             <div className="grid gap-6 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
               <div className="space-y-4">
                 <CompanyList
-                  companies={catalog.companies}
+                  companies={sortedCompanies}
                   selectedId={selectedId}
                   onSelect={handleSelectCompany}
                   onCreate={() => {
