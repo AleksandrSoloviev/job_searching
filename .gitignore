@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+*.local
+.DS_Store
+tsconfig.tsbuildinfo
+tsconfig.app.tsbuildinfo
+tsconfig.node.tsbuildinfo

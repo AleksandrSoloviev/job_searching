@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aleksandrsoloviev.github.io/job_searching/data/companies.schema.json",
+  "title": "Каталог целевых компаний",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "companies"],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Версия схемы. Несовместимая мажорная версия отклоняется."
+    },
+    "companies": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/company" }
+    }
+  },
+  "$defs": {
+    "company": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "website": { "type": "string" },
+        "email": { "type": "string" },
+        "coverLetter": { "type": "string" },
+        "vacancies": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/vacancy" }
+        },
+        "vacanciesSource": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "vacancy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "title", "url"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "format": "uri" },
+        "publishedAt": { "type": "string" },
+        "summary": { "type": "string" }
+      }
+    }
+  }
+}
