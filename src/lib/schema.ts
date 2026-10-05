@@ -1,15 +1,9 @@
 import { z } from 'zod'
-import { isCiphertextEnvelope } from '@/lib/letter-crypto'
 
 export const CATALOG_SCHEMA_VERSION = '1.0.0'
 
 const optionalHttpUrl = z.union([z.string().url(), z.literal('')]).optional()
 const optionalEmail = z.union([z.string().email(), z.literal('')]).optional()
-
-const fileCoverLetterSchema = z.string().refine(
-  (value) => value === '' || isCiphertextEnvelope(value),
-  { error: 'coverLetter в файле должен быть пустым или конвертом enc.v1' },
-)
 
 export const vacancySchema = z.object({
   id: z.string().min(1),
@@ -19,33 +13,27 @@ export const vacancySchema = z.object({
   summary: z.string().optional(),
 })
 
-const companyBaseSchema = z.object({
+export const companySchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   website: optionalHttpUrl,
   email: optionalEmail,
+  coverLetter: z.string().optional().default(''),
   vacancies: z.array(vacancySchema).optional().default([]),
   vacanciesSource: z.string().optional(),
   updatedAt: z.string().optional(),
 })
 
-export const fileCompanySchema = companyBaseSchema.extend({
-  coverLetter: fileCoverLetterSchema.optional().default(''),
-})
+export const fileCompanySchema = companySchema
+export const workingCompanySchema = companySchema
 
-export const workingCompanySchema = companyBaseSchema.extend({
-  coverLetter: z.string().optional().default(''),
-})
-
-export const fileCatalogSchema = z.object({
+export const catalogSchema = z.object({
   schemaVersion: z.string().min(1),
-  companies: z.array(fileCompanySchema),
+  companies: z.array(companySchema),
 })
 
-export const workingCatalogSchema = z.object({
-  schemaVersion: z.string().min(1),
-  companies: z.array(workingCompanySchema),
-})
+export const fileCatalogSchema = catalogSchema
+export const workingCatalogSchema = catalogSchema
 
 export type Vacancy = z.infer<typeof vacancySchema>
 export type FileCompany = z.infer<typeof fileCompanySchema>
@@ -71,8 +59,8 @@ const dedupeById = <T extends { id: string }>(items: T[]): T[] => {
   return [...unique.values()]
 }
 
-export const parseFileCatalog = (data: unknown): FileCatalog => {
-  const catalog = fileCatalogSchema.parse(data)
+export const parseCatalog = (data: unknown): Catalog => {
+  const catalog = catalogSchema.parse(data)
   assertCompatibleVersion(catalog.schemaVersion)
 
   return {
@@ -81,17 +69,8 @@ export const parseFileCatalog = (data: unknown): FileCatalog => {
   }
 }
 
-export const parseWorkingCatalog = (data: unknown): Catalog => {
-  const catalog = workingCatalogSchema.parse(data)
-  assertCompatibleVersion(catalog.schemaVersion)
-
-  return {
-    schemaVersion: catalog.schemaVersion,
-    companies: dedupeById(catalog.companies),
-  }
-}
-
-export const parseCatalog = parseWorkingCatalog
+export const parseFileCatalog = parseCatalog
+export const parseWorkingCatalog = parseCatalog
 
 export const createEmptyCatalog = (): Catalog => ({
   schemaVersion: CATALOG_SCHEMA_VERSION,

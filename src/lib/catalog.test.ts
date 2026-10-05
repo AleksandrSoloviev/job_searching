@@ -1,15 +1,10 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   importFileCatalog,
   removeCompany,
   toFileCatalog,
   upsertCompany,
 } from '@/lib/catalog'
-import {
-  encryptLetter,
-  SECRET_KEY_NAME,
-  writeSecretKey,
-} from '@/lib/letter-crypto'
 import { parseFileCatalog, type Catalog, type Company } from '@/lib/schema'
 
 const company = (
@@ -21,8 +16,6 @@ const company = (
   vacancies: [],
   ...overrides,
 })
-
-const createTestPassphrase = (): string => `test-${crypto.randomUUID()}`
 
 describe('операции каталога', () => {
   it('обновляет компанию с тем же id, не создавая дубль', () => {
@@ -47,23 +40,19 @@ describe('операции каталога', () => {
   })
 })
 
-describe('импорт файла', () => {
-  beforeEach(() => {
-    localStorage.removeItem(SECRET_KEY_NAME)
+describe('импорт и экспорт файла', () => {
+  it('отклоняет файл без schemaVersion и оставляет смысл отказа', () => {
+    expect(() => importFileCatalog({ companies: [] })).toThrow()
   })
 
-  it('отклоняет файл без schemaVersion и оставляет смысл отказа', async () => {
-    await expect(importFileCatalog({ companies: [] })).rejects.toThrow()
-  })
-
-  it('отклоняет мажор ≠ 1', async () => {
-    await expect(
+  it('отклоняет мажор ≠ 1', () => {
+    expect(() =>
       importFileCatalog({ schemaVersion: '2.0.0', companies: [] }),
-    ).rejects.toThrow('Несовместимая мажорная версия схемы каталога')
+    ).toThrow('Несовместимая мажорная версия схемы каталога')
   })
 
-  it('отклоняет весь файл при одной битой записи', async () => {
-    await expect(
+  it('отклоняет весь файл при одной битой записи', () => {
+    expect(() =>
       importFileCatalog({
         schemaVersion: '1.0.0',
         companies: [
@@ -71,7 +60,7 @@ describe('импорт файла', () => {
           { id: 'bad', name: '' },
         ],
       }),
-    ).rejects.toThrow()
+    ).toThrow()
   })
 
   it('обновляет компанию с тем же id, а не плодит дубль', () => {
@@ -87,75 +76,37 @@ describe('импорт файла', () => {
     expect(catalog.companies[0]?.name).toBe('Новое')
   })
 
-  it('принимает конверт без ключа и не показывает письмо', async () => {
-    writeSecretKey(createTestPassphrase())
-    const envelope = await encryptLetter('Секретное письмо', 'acme')
-    localStorage.removeItem(SECRET_KEY_NAME)
-
-    const imported = await importFileCatalog({
+  it('принимает письмо обычной строкой', () => {
+    const imported = importFileCatalog({
       schemaVersion: '1.0.0',
       companies: [
         {
           id: 'acme',
           name: 'Acme',
           email: 'jobs@acme.example',
-          coverLetter: envelope,
+          coverLetter: 'Здравствуйте, команда Acme.',
         },
       ],
     })
 
-    expect(imported.companies[0]?.name).toBe('Acme')
     expect(imported.companies[0]?.email).toBe('jobs@acme.example')
-    expect(imported.companies[0]?.coverLetter).toBe('')
+    expect(imported.companies[0]?.coverLetter).toBe(
+      'Здравствуйте, команда Acme.',
+    )
   })
 
-  it('не показывает письмо, если конверт не расшифровался', async () => {
-    writeSecretKey(createTestPassphrase())
-    const envelope = await encryptLetter('Секретное письмо', 'acme')
-    writeSecretKey(createTestPassphrase())
-
-    const imported = await importFileCatalog({
-      schemaVersion: '1.0.0',
-      companies: [
-        {
-          id: 'acme',
-          name: 'Acme',
-          coverLetter: envelope,
-        },
-      ],
-    })
-
-    expect(imported.companies[0]?.coverLetter).toBe('')
-  })
-
-  it('отклоняет открытый текст письма в файле', async () => {
-    await expect(
-      importFileCatalog({
-        schemaVersion: '1.0.0',
-        companies: [
-          {
-            id: 'acme',
-            name: 'Acme',
-            coverLetter: 'Открытый текст',
-          },
-        ],
-      }),
-    ).rejects.toThrow()
-  })
-
-  it('при экспорте без ключа не пишет открытые письма', async () => {
-    const exported = await toFileCatalog({
+  it('экспортирует письмо той же строкой', () => {
+    const exported = toFileCatalog({
       schemaVersion: '1.0.0',
       companies: [
         company({
           id: 'acme',
           name: 'Acme',
-          coverLetter: 'Нельзя в файл',
+          coverLetter: 'Текст письма',
         }),
       ],
     })
 
-    expect(exported.lettersOmitted).toBe(true)
-    expect(exported.fileCatalog.companies[0]?.coverLetter).toBe('')
+    expect(exported.companies[0]?.coverLetter).toBe('Текст письма')
   })
 })

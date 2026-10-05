@@ -115,19 +115,19 @@ describe('parseFileCatalog', () => {
     ).toThrow()
   })
 
-  it('отклоняет открытый текст письма в файле', () => {
-    expect(() =>
-      parseFileCatalog({
-        schemaVersion: '1.0.0',
-        companies: [
-          {
-            id: 'acme',
-            name: 'Acme',
-            coverLetter: 'Открытый текст',
-          },
-        ],
-      }),
-    ).toThrow()
+  it('принимает письмо обычной строкой в файле', () => {
+    const catalog = parseFileCatalog({
+      schemaVersion: '1.0.0',
+      companies: [
+        {
+          id: 'acme',
+          name: 'Acme',
+          coverLetter: 'Открытый текст',
+        },
+      ],
+    })
+
+    expect(catalog.companies[0]?.coverLetter).toBe('Открытый текст')
   })
 
   it('принимает email и пустое письмо', () => {

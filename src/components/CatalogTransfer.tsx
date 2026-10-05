@@ -22,8 +22,8 @@ export const CatalogTransfer = ({
         ничего не синхронизируется.
       </p>
       <p className="text-sm text-slate-600">
-        GrokBot пишет тот же JSON: email открытым текстом, письма только как
-        конверт enc.v1 или пустая строка.
+        GrokBot пишет тот же JSON: имя, сайт, email, письмо и вакансии обычными
+        строками.
       </p>
       <div className="flex flex-wrap gap-2">
         <label className="rounded border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50">

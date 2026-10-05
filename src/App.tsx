@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { CatalogTransfer } from '@/components/CatalogTransfer'
 import { CompanyForm } from '@/components/CompanyForm'
 import { CompanyList } from '@/components/CompanyList'
-import { DecryptKeyField } from '@/components/DecryptKeyField'
+import { CompanyTable } from '@/components/CompanyTable'
 import { VacancyList } from '@/components/VacancyList'
 import {
   importFileCatalog,
@@ -51,6 +51,11 @@ export const App = () => {
 
   const selectedCompany =
     catalog?.companies.find((company) => company.id === selectedId) ?? null
+
+  const handleSelectCompany = (companyId: string): void => {
+    setSelectedId(companyId)
+    setIsCreating(false)
+  }
 
   const handlePersist = async (next: Catalog): Promise<void> => {
     const saved = await persistCatalog(next)
@@ -102,7 +107,7 @@ export const App = () => {
     try {
       const text = await file.text()
       const data: unknown = JSON.parse(text)
-      const imported = await importFileCatalog(data)
+      const imported = importFileCatalog(data)
       await handlePersist(imported)
       setSelectedId(null)
       setIsCreating(false)
@@ -112,19 +117,15 @@ export const App = () => {
     }
   }
 
-  const handleExportFile = async (): Promise<void> => {
+  const handleExportFile = (): void => {
     if (!catalog) {
       return
     }
 
     try {
-      const { fileCatalog, lettersOmitted } = await toFileCatalog(catalog)
+      const fileCatalog = toFileCatalog(catalog)
       downloadJson('companies.json', fileCatalog)
-      setStatus(
-        lettersOmitted
-          ? 'Экспорт готов. Ключ не задан, поэтому письма в файл не попали.'
-          : 'Экспорт готов',
-      )
+      setStatus('Экспорт готов')
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Не удалось экспортировать')
     }
@@ -145,7 +146,7 @@ export const App = () => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-5xl px-4 py-4">
+        <div className="mx-auto max-w-6xl px-4 py-4">
           <h1 className="text-xl font-semibold">Трекер целевых компаний</h1>
           <p className="mt-1 text-sm text-slate-500">
             Данные живут в этом браузере. Это не облачная база, серверной
@@ -153,74 +154,69 @@ export const App = () => {
           </p>
         </div>
       </header>
-      <main className="mx-auto grid max-w-5xl gap-6 px-4 py-8 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
+      <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8">
         {catalog ? (
           <>
-            <div className="space-y-4">
-              <CompanyList
-                companies={catalog.companies}
-                selectedId={selectedId}
-                onSelect={(companyId) => {
-                  setSelectedId(companyId)
-                  setIsCreating(false)
-                }}
-                onCreate={() => {
-                  setSelectedId(null)
-                  setIsCreating(true)
-                }}
-                onDelete={(companyId) => {
-                  void handleDeleteCompany(companyId)
-                }}
-              />
-              <CatalogTransfer
-                onImportFile={(file) => {
-                  void handleImportFile(file)
-                }}
-                onExportFile={() => {
-                  void handleExportFile()
-                }}
-                onResetToSeed={() => {
-                  void handleResetToSeed()
-                }}
-              />
-              <DecryptKeyField
-                onKeyChange={() => {
-                  setStatus(
-                    'Ключ обновлён только в этом браузере. Чтобы подтянуть письма из файла сайта, сбросьте копию.',
-                  )
-                }}
-              />
-            </div>
-            <div className="space-y-4">
-              {status ? (
-                <p role="status" className="text-sm text-slate-700">
-                  {status}
-                </p>
-              ) : null}
-              {isCreating || selectedCompany ? (
-                <>
-                  <CompanyForm
-                    key={selectedCompany?.id ?? 'new'}
-                    company={selectedCompany}
-                    onSave={(company) => {
-                      void handleSaveCompany(company)
-                    }}
-                  />
-                  {selectedCompany ? (
-                    <VacancyList
-                      vacancies={selectedCompany.vacancies}
-                      isFilterEnabled={isFilterEnabled}
-                      onToggleFilter={() => {
-                        setIsFilterEnabled(!isFilterEnabled)
+            <CompanyTable
+              companies={catalog.companies}
+              selectedId={selectedId}
+              onSelect={handleSelectCompany}
+            />
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
+              <div className="space-y-4">
+                <CompanyList
+                  companies={catalog.companies}
+                  selectedId={selectedId}
+                  onSelect={handleSelectCompany}
+                  onCreate={() => {
+                    setSelectedId(null)
+                    setIsCreating(true)
+                  }}
+                  onDelete={(companyId) => {
+                    void handleDeleteCompany(companyId)
+                  }}
+                />
+                <CatalogTransfer
+                  onImportFile={(file) => {
+                    void handleImportFile(file)
+                  }}
+                  onExportFile={handleExportFile}
+                  onResetToSeed={() => {
+                    void handleResetToSeed()
+                  }}
+                />
+              </div>
+              <div className="space-y-4">
+                {status ? (
+                  <p role="status" className="text-sm text-slate-700">
+                    {status}
+                  </p>
+                ) : null}
+                {isCreating || selectedCompany ? (
+                  <>
+                    <CompanyForm
+                      key={selectedCompany?.id ?? 'new'}
+                      company={selectedCompany}
+                      onSave={(company) => {
+                        void handleSaveCompany(company)
                       }}
                     />
-                  ) : null}
-                </>
-              ) : (
-                <p className="text-sm text-slate-600">
-                  Выберите компанию или добавьте новую.
-                </p>
-              )}
+                    {selectedCompany ? (
+                      <VacancyList
+                        vacancies={selectedCompany.vacancies}
+                        isFilterEnabled={isFilterEnabled}
+                        onToggleFilter={() => {
+                          setIsFilterEnabled(!isFilterEnabled)
+                        }}
+                      />
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="text-sm text-slate-600">
+                    Выберите компанию или добавьте новую.
+                  </p>
+                )}
+              </div>
             </div>
           </>
         ) : (

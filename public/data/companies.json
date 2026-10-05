@@ -6,7 +6,7 @@
       "name": "Acme",
       "website": "https://acme.example",
       "email": "jobs@acme.example",
-      "coverLetter": "",
+      "coverLetter": "Здравствуйте, команда Acme. Меня интересует роль Frontend Engineer.",
       "vacancies": [
         {
           "id": "fe-1",

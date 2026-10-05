@@ -30,6 +30,7 @@ describe('App', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Список пуст/i)).toBeInTheDocument()
+      expect(screen.getByText(/Таблица пуста/i)).toBeInTheDocument()
     })
 
     fireEvent.click(screen.getByRole('button', { name: 'Добавить компанию' }))
@@ -42,6 +43,14 @@ describe('App', () => {
       expect(
         screen.getByRole('button', { name: 'Открыть компанию Acme' }),
       ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: 'Открыть карточку компании Acme' }),
+      ).toBeInTheDocument()
     })
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Открыть карточку компании Acme' }),
+    )
+    expect(screen.getByLabelText('Имя')).toHaveValue('Acme')
   })
 })
