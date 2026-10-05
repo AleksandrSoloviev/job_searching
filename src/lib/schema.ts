@@ -5,12 +5,51 @@ export const CATALOG_SCHEMA_VERSION = '1.0.0'
 const optionalHttpUrl = z.union([z.string().url(), z.literal('')]).optional()
 const optionalEmail = z.union([z.string().email(), z.literal('')]).optional()
 
+const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
+
+export const isIsoDate = (value: string): boolean => {
+  const match = ISO_DATE_PATTERN.exec(value)
+
+  if (!match) {
+    return false
+  }
+
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  const utc = new Date(Date.UTC(year, month - 1, day))
+
+  return (
+    utc.getUTCFullYear() === year &&
+    utc.getUTCMonth() === month - 1 &&
+    utc.getUTCDate() === day
+  )
+}
+
+export const todayIsoDate = (): string => {
+  const now = new Date()
+  const year = String(now.getFullYear())
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+const optionalIsoDate = z
+  .string()
+  .optional()
+  .default('')
+  .refine((value) => value === '' || isIsoDate(value), {
+    error: 'lastAppliedAt должен быть датой YYYY-MM-DD или пустым',
+  })
+
 export const vacancySchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   url: z.string().url(),
   publishedAt: z.string().optional(),
   summary: z.string().optional(),
+  lastAppliedAt: optionalIsoDate,
 })
 
 export const companySchema = z.object({

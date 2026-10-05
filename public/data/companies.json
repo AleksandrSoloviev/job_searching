@@ -12,13 +12,15 @@
           "id": "fe-1",
           "title": "Frontend Engineer",
           "url": "https://acme.example/jobs/fe-1",
-          "summary": "React TypeScript"
+          "summary": "React TypeScript",
+          "lastAppliedAt": "2026-10-01"
         },
         {
           "id": "be-1",
           "title": "Backend Engineer",
           "url": "https://acme.example/jobs/be-1",
-          "summary": "Java Spring"
+          "summary": "Java Spring",
+          "lastAppliedAt": ""
         }
       ]
     }

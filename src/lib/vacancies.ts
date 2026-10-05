@@ -31,3 +31,8 @@ export const isVacancyLink = (url: string): boolean => {
     return false
   }
 }
+
+export const lastAppliedAtLabel = (lastAppliedAt: string | undefined): string => {
+  const trimmed = lastAppliedAt?.trim() ?? ''
+  return trimmed === '' ? 'Отклика не было' : `Отклик ${trimmed}`
+}

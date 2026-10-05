@@ -14,6 +14,7 @@ const acme: Company = {
       id: 'fe-1',
       title: 'Frontend Engineer',
       url: 'https://acme.example/jobs/fe-1',
+      lastAppliedAt: '2026-10-01',
     },
   ],
 }
@@ -21,11 +22,13 @@ const acme: Company = {
 describe('CompanyTable', () => {
   it('показывает колонки и кликабельные ячейки, письмо в подсказке', () => {
     const handleSelect = vi.fn()
+    const handleMarkApplied = vi.fn()
     render(
       <CompanyTable
         companies={[acme]}
         selectedId={null}
         onSelect={handleSelect}
+        onMarkApplied={handleMarkApplied}
       />,
     )
 
@@ -63,5 +66,20 @@ describe('CompanyTable', () => {
       'href',
       'https://acme.example/jobs/fe-1',
     )
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Отклик 2026-10-01 по вакансии Frontend Engineer. Открыть карточку',
+      }),
+    )
+    expect(handleSelect).toHaveBeenCalledWith('acme')
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Отметка о подаче на Frontend Engineer',
+      }),
+    )
+    expect(handleMarkApplied).toHaveBeenCalledWith('acme', 'fe-1')
+    expect(handleSelect).toHaveBeenCalledTimes(2)
   })
 })

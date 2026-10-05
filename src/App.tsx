@@ -7,6 +7,7 @@ import { VacancyList } from '@/components/VacancyList'
 import {
   importFileCatalog,
   loadWorkingCatalog,
+  markVacancyAppliedToday,
   persistCatalog,
   removeCompany,
   resetToPublicSeed,
@@ -74,6 +75,28 @@ export const App = () => {
       setStatus('Компания сохранена в браузере')
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Не удалось сохранить')
+    }
+  }
+
+  const handleMarkApplied = async (
+    companyId: string,
+    vacancyId: string,
+  ): Promise<void> => {
+    if (!catalog) {
+      return
+    }
+
+    try {
+      await handlePersist(
+        markVacancyAppliedToday(catalog, companyId, vacancyId),
+      )
+      setStatus('Отметка о подаче сохранена в браузере')
+    } catch (error) {
+      setStatus(
+        error instanceof Error
+          ? error.message
+          : 'Не удалось сохранить отметку о подаче',
+      )
     }
   }
 
@@ -161,6 +184,9 @@ export const App = () => {
               companies={catalog.companies}
               selectedId={selectedId}
               onSelect={handleSelectCompany}
+              onMarkApplied={(companyId, vacancyId) => {
+                void handleMarkApplied(companyId, vacancyId)
+              }}
             />
             <div className="grid gap-6 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
               <div className="space-y-4">
@@ -195,7 +221,16 @@ export const App = () => {
                 {isCreating || selectedCompany ? (
                   <>
                     <CompanyForm
-                      key={selectedCompany?.id ?? 'new'}
+                      key={
+                        selectedCompany
+                          ? `${selectedCompany.id}:${selectedCompany.vacancies
+                              .map(
+                                (vacancy) =>
+                                  `${vacancy.id}:${vacancy.lastAppliedAt ?? ''}`,
+                              )
+                              .join(',')}`
+                          : 'new'
+                      }
                       company={selectedCompany}
                       onSave={(company) => {
                         void handleSaveCompany(company)

@@ -7,6 +7,7 @@ const vacancy = (id: string, title: string, summary = ''): Vacancy => ({
   title,
   url: `https://jobs.example/${id}`,
   summary,
+  lastAppliedAt: '',
 })
 
 describe('filterVacancies', () => {

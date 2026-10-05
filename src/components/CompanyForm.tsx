@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   createCompanyId,
   createVacancyId,
+  todayIsoDate,
   workingCompanySchema,
   type Company,
   type Vacancy,
@@ -67,6 +68,7 @@ export const CompanyForm = ({ company, onSave }: CompanyFormProps) => {
           id: createVacancyId(),
           title,
           url,
+          lastAppliedAt: '',
         },
       ],
       vacancyTitle: '',
@@ -95,7 +97,12 @@ export const CompanyForm = ({ company, onSave }: CompanyFormProps) => {
 
       vacancies = [
         ...vacancies,
-        { id: createVacancyId(), title: pendingTitle, url: pendingUrl },
+        {
+          id: createVacancyId(),
+          title: pendingTitle,
+          url: pendingUrl,
+          lastAppliedAt: '',
+        },
       ]
     }
 
@@ -229,30 +236,95 @@ export const CompanyForm = ({ company, onSave }: CompanyFormProps) => {
         {draft.vacancies.length === 0 ? (
           <p className="text-sm text-slate-500">Вакансий пока нет.</p>
         ) : (
-          <ul className="space-y-1 text-sm">
-            {draft.vacancies.map((vacancy) => (
-              <li
-                key={vacancy.id}
-                className="flex items-center justify-between gap-2"
-              >
-                <span>{vacancy.title}</span>
-                <button
-                  type="button"
-                  aria-label={`Убрать вакансию ${vacancy.title}`}
-                  onClick={() => {
-                    setDraft({
-                      ...draft,
-                      vacancies: draft.vacancies.filter(
-                        (item) => item.id !== vacancy.id,
-                      ),
-                    })
-                  }}
-                  className="text-red-700 hover:underline"
+          <ul className="space-y-3 text-sm">
+            {draft.vacancies.map((vacancy) => {
+              const appliedId = `vacancy-applied-${vacancy.id}`
+              const appliedValue = vacancy.lastAppliedAt ?? ''
+
+              return (
+                <li
+                  key={vacancy.id}
+                  className="space-y-2 rounded border border-slate-200 p-2"
                 >
-                  Убрать
-                </button>
-              </li>
-            ))}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium">{vacancy.title}</span>
+                    <button
+                      type="button"
+                      aria-label={`Убрать вакансию ${vacancy.title}`}
+                      onClick={() => {
+                        setDraft({
+                          ...draft,
+                          vacancies: draft.vacancies.filter(
+                            (item) => item.id !== vacancy.id,
+                          ),
+                        })
+                      }}
+                      className="text-red-700 hover:underline"
+                    >
+                      Убрать
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap items-end gap-2">
+                    <div className="space-y-1">
+                      <label htmlFor={appliedId} className="text-xs text-slate-600">
+                        Последний отклик
+                      </label>
+                      <input
+                        id={appliedId}
+                        type="date"
+                        value={appliedValue}
+                        onChange={(event) => {
+                          setDraft({
+                            ...draft,
+                            vacancies: draft.vacancies.map((item) =>
+                              item.id === vacancy.id
+                                ? { ...item, lastAppliedAt: event.target.value }
+                                : item,
+                            ),
+                          })
+                        }}
+                        aria-label={`Дата последнего отклика на ${vacancy.title}`}
+                        className="rounded border border-slate-300 px-2 py-1 text-sm"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={`Отметить сегодняшний отклик на ${vacancy.title}`}
+                      onClick={() => {
+                        setDraft({
+                          ...draft,
+                          vacancies: draft.vacancies.map((item) =>
+                            item.id === vacancy.id
+                              ? { ...item, lastAppliedAt: todayIsoDate() }
+                              : item,
+                          ),
+                        })
+                      }}
+                      className="rounded border border-slate-300 px-2 py-1 text-sm hover:bg-slate-50"
+                    >
+                      Отметить сегодня
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Сбросить дату отклика на ${vacancy.title}`}
+                      onClick={() => {
+                        setDraft({
+                          ...draft,
+                          vacancies: draft.vacancies.map((item) =>
+                            item.id === vacancy.id
+                              ? { ...item, lastAppliedAt: '' }
+                              : item,
+                          ),
+                        })
+                      }}
+                      className="rounded border border-slate-300 px-2 py-1 text-sm hover:bg-slate-50"
+                    >
+                      Сбросить дату
+                    </button>
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         )}
         <div className="grid gap-2 sm:grid-cols-2">

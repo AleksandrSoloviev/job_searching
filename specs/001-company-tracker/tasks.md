@@ -165,6 +165,25 @@
 
 ---
 
+## Phase 10: Дата последнего отклика по вакансии
+
+**Цель**: у каждой вакансии своё поле `lastAppliedAt`; в карточке отметить / сменить / сбросить; в таблице дата видна.
+
+- [X] T041 Добавить `lastAppliedAt` в `src/lib/schema.ts`, `public/data/companies.schema.json` и сид `public/data/companies.json`: пусто или ISO `YYYY-MM-DD`
+- [X] T042 [P] Поле и кнопки в `src/components/CompanyForm.tsx`; показ в `src/components/VacancyList.tsx` и кликабельная дата в `src/components/CompanyTable.tsx`
+- [X] T043 [P] Тесты схемы, импорта/экспорта и формы: `src/lib/schema.test.ts`, `src/lib/catalog.test.ts`, `src/components/CompanyForm.test.tsx`, `src/components/CompanyTable.test.tsx`
+- [X] T044 Обновить `spec.md`, `data-model.md`, `contracts/catalog.schema.md`, `README.md` и этот `tasks.md`
+
+**Checkpoint**: дата на вакансии, не на компании; шифрования нет.
+
+---
+
+## Phase 11: Отметка о подаче в таблице
+
+- [X] T045 Кнопка «Отметка о подаче» в `src/components/CompanyTable.tsx`; `markVacancyAppliedToday` в `src/lib/catalog.ts`; мгновенная запись в IndexedDB из `src/App.tsx`; дата в таблице видна до и после клика
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

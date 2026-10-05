@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '@/App'
+import { todayIsoDate } from '@/lib/schema'
 
 vi.mock('@/lib/storage', () => ({
   CATALOG_STORAGE_KEY: 'job-searching:catalog',
@@ -52,5 +53,69 @@ describe('App', () => {
       screen.getByRole('button', { name: 'Открыть карточку компании Acme' }),
     )
     expect(screen.getByLabelText('Имя')).toHaveValue('Acme')
+  })
+
+  it('ставит отметку о подаче в таблице без открытия карточки', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          schemaVersion: '1.0.0',
+          companies: [
+            {
+              id: 'acme',
+              name: 'Acme',
+              website: 'https://acme.example',
+              email: 'jobs@acme.example',
+              coverLetter: '',
+              vacancies: [
+                {
+                  id: 'be-1',
+                  title: 'Backend Engineer',
+                  url: 'https://acme.example/jobs/be-1',
+                  lastAppliedAt: '',
+                },
+              ],
+            },
+          ],
+        }),
+      }),
+    )
+
+    render(<App />)
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', {
+          name: 'Отметка о подаче на Backend Engineer',
+        }),
+      ).toBeInTheDocument()
+    })
+
+    expect(
+      screen.getByText('Выберите компанию или добавьте новую.'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Отклика не было')).toBeInTheDocument()
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Отметка о подаче на Backend Engineer',
+      }),
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(`Отклик ${todayIsoDate()}`),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText('Отметка о подаче сохранена в браузере'),
+      ).toBeInTheDocument()
+    })
+
+    expect(
+      screen.getByText('Выберите компанию или добавьте новую.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByLabelText('Имя')).not.toBeInTheDocument()
   })
 })

@@ -146,4 +146,96 @@ describe('parseFileCatalog', () => {
     expect(catalog.companies[0]?.email).toBe('jobs@acme.example')
     expect(catalog.companies[0]?.coverLetter).toBe('')
   })
+
+  it('принимает lastAppliedAt как YYYY-MM-DD или пустую строку', () => {
+    const catalog = parseFileCatalog({
+      schemaVersion: '1.0.0',
+      companies: [
+        {
+          id: 'acme',
+          name: 'Acme',
+          vacancies: [
+            {
+              id: 'fe-1',
+              title: 'Frontend Engineer',
+              url: 'https://acme.example/jobs/fe-1',
+              lastAppliedAt: '2026-10-01',
+            },
+            {
+              id: 'be-1',
+              title: 'Backend Engineer',
+              url: 'https://acme.example/jobs/be-1',
+              lastAppliedAt: '',
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(catalog.companies[0]?.vacancies[0]?.lastAppliedAt).toBe('2026-10-01')
+    expect(catalog.companies[0]?.vacancies[1]?.lastAppliedAt).toBe('')
+  })
+
+  it('подставляет пустой lastAppliedAt, если поля нет', () => {
+    const catalog = parseFileCatalog({
+      schemaVersion: '1.0.0',
+      companies: [
+        {
+          id: 'acme',
+          name: 'Acme',
+          vacancies: [
+            {
+              id: 'fe-1',
+              title: 'Frontend Engineer',
+              url: 'https://acme.example/jobs/fe-1',
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(catalog.companies[0]?.vacancies[0]?.lastAppliedAt).toBe('')
+  })
+
+  it('отклоняет lastAppliedAt не в формате YYYY-MM-DD', () => {
+    expect(() =>
+      parseFileCatalog({
+        schemaVersion: '1.0.0',
+        companies: [
+          {
+            id: 'acme',
+            name: 'Acme',
+            vacancies: [
+              {
+                id: 'fe-1',
+                title: 'Frontend Engineer',
+                url: 'https://acme.example/jobs/fe-1',
+                lastAppliedAt: '01.10.2026',
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow()
+
+    expect(() =>
+      parseFileCatalog({
+        schemaVersion: '1.0.0',
+        companies: [
+          {
+            id: 'acme',
+            name: 'Acme',
+            vacancies: [
+              {
+                id: 'fe-1',
+                title: 'Frontend Engineer',
+                url: 'https://acme.example/jobs/fe-1',
+                lastAppliedAt: '2026-13-40',
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow()
+  })
 })

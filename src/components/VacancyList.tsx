@@ -1,4 +1,8 @@
-import { filterVacancies, isVacancyLink } from '@/lib/vacancies'
+import {
+  filterVacancies,
+  isVacancyLink,
+  lastAppliedAtLabel,
+} from '@/lib/vacancies'
 import type { Vacancy } from '@/lib/schema'
 
 type VacancyListProps = {
@@ -55,6 +59,9 @@ export const VacancyList = ({
               ) : (
                 <span>{vacancy.title}</span>
               )}
+              <span className="ml-2 text-slate-500">
+                {lastAppliedAtLabel(vacancy.lastAppliedAt)}
+              </span>
             </li>
           ))}
         </ul>

@@ -2,6 +2,7 @@ import {
   createEmptyCatalog,
   parseFileCatalog,
   parseWorkingCatalog,
+  todayIsoDate,
   type Catalog,
   type Company,
   type FileCatalog,
@@ -20,6 +21,30 @@ export const removeCompany = (catalog: Catalog, companyId: string): Catalog => (
   schemaVersion: catalog.schemaVersion,
   companies: catalog.companies.filter((item) => item.id !== companyId),
 })
+
+export const markVacancyAppliedToday = (
+  catalog: Catalog,
+  companyId: string,
+  vacancyId: string,
+): Catalog => {
+  const company = catalog.companies.find((item) => item.id === companyId)
+
+  if (!company) {
+    return catalog
+  }
+
+  const appliedAt = todayIsoDate()
+
+  return upsertCompany(catalog, {
+    ...company,
+    updatedAt: new Date().toISOString(),
+    vacancies: company.vacancies.map((vacancy) =>
+      vacancy.id === vacancyId
+        ? { ...vacancy, lastAppliedAt: appliedAt }
+        : vacancy,
+    ),
+  })
+}
 
 export const hydrateFileCatalog = (fileCatalog: FileCatalog): Catalog => ({
   schemaVersion: fileCatalog.schemaVersion,

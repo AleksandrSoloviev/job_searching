@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import {
   importFileCatalog,
+  markVacancyAppliedToday,
   removeCompany,
   toFileCatalog,
   upsertCompany,
 } from '@/lib/catalog'
-import { parseFileCatalog, type Catalog, type Company } from '@/lib/schema'
+import {
+  parseFileCatalog,
+  todayIsoDate,
+  type Catalog,
+  type Company,
+} from '@/lib/schema'
 
 const company = (
   overrides: Partial<Company> & Pick<Company, 'id' | 'name'>,
@@ -37,6 +43,37 @@ describe('операции каталога', () => {
     }
 
     expect(removeCompany(catalog, 'acme').companies).toEqual([])
+  })
+
+  it('ставит сегодняшнюю дату отклика только у выбранной вакансии', () => {
+    const catalog: Catalog = {
+      schemaVersion: '1.0.0',
+      companies: [
+        company({
+          id: 'acme',
+          name: 'Acme',
+          vacancies: [
+            {
+              id: 'fe-1',
+              title: 'Frontend Engineer',
+              url: 'https://acme.example/jobs/fe-1',
+              lastAppliedAt: '',
+            },
+            {
+              id: 'be-1',
+              title: 'Backend Engineer',
+              url: 'https://acme.example/jobs/be-1',
+              lastAppliedAt: '2026-09-01',
+            },
+          ],
+        }),
+      ],
+    }
+
+    const next = markVacancyAppliedToday(catalog, 'acme', 'fe-1')
+
+    expect(next.companies[0]?.vacancies[0]?.lastAppliedAt).toBe(todayIsoDate())
+    expect(next.companies[0]?.vacancies[1]?.lastAppliedAt).toBe('2026-09-01')
   })
 })
 
@@ -92,6 +129,31 @@ describe('импорт и экспорт файла', () => {
     expect(imported.companies[0]?.email).toBe('jobs@acme.example')
     expect(imported.companies[0]?.coverLetter).toBe(
       'Здравствуйте, команда Acme.',
+    )
+  })
+
+  it('сохраняет lastAppliedAt при импорте и экспорте', () => {
+    const imported = importFileCatalog({
+      schemaVersion: '1.0.0',
+      companies: [
+        {
+          id: 'acme',
+          name: 'Acme',
+          vacancies: [
+            {
+              id: 'fe-1',
+              title: 'Frontend Engineer',
+              url: 'https://acme.example/jobs/fe-1',
+              lastAppliedAt: '2026-10-01',
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(imported.companies[0]?.vacancies[0]?.lastAppliedAt).toBe('2026-10-01')
+    expect(toFileCatalog(imported).companies[0]?.vacancies[0]?.lastAppliedAt).toBe(
+      '2026-10-01',
     )
   })
 

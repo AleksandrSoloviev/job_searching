@@ -46,7 +46,12 @@
         "title": { "type": "string", "minLength": 1 },
         "url": { "type": "string", "format": "uri" },
         "publishedAt": { "type": "string" },
-        "summary": { "type": "string" }
+        "summary": { "type": "string" },
+        "lastAppliedAt": {
+          "type": "string",
+          "description": "Дата последнего отклика на эту вакансию: YYYY-MM-DD или пустая строка.",
+          "pattern": "^$|^\\d{4}-\\d{2}-\\d{2}$"
+        }
       }
     }
   }

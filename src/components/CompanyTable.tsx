@@ -1,10 +1,11 @@
-import { isVacancyLink } from '@/lib/vacancies'
+import { isVacancyLink, lastAppliedAtLabel } from '@/lib/vacancies'
 import type { Company } from '@/lib/schema'
 
 type CompanyTableProps = {
   companies: Company[]
   selectedId: string | null
   onSelect: (companyId: string) => void
+  onMarkApplied: (companyId: string, vacancyId: string) => void
 }
 
 const coverLetterHint = (coverLetter: string): string => {
@@ -16,6 +17,7 @@ export const CompanyTable = ({
   companies,
   selectedId,
   onSelect,
+  onMarkApplied,
 }: CompanyTableProps) => {
   return (
     <section aria-labelledby="company-table-heading" className="space-y-3">
@@ -123,23 +125,53 @@ export const CompanyTable = ({
                         <span className="text-slate-400">—</span>
                       ) : (
                         <ul className="space-y-1">
-                          {company.vacancies.map((vacancy) => (
-                            <li key={vacancy.id}>
-                              {isVacancyLink(vacancy.url) ? (
-                                <a
-                                  href={vacancy.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  title={letterHint}
-                                  className="text-slate-900 underline hover:text-slate-600"
+                          {company.vacancies.map((vacancy) => {
+                            const appliedLabel = lastAppliedAtLabel(
+                              vacancy.lastAppliedAt,
+                            )
+
+                            return (
+                              <li
+                                key={vacancy.id}
+                                className="flex flex-wrap items-center gap-x-2 gap-y-1"
+                              >
+                                {isVacancyLink(vacancy.url) ? (
+                                  <a
+                                    href={vacancy.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    title={letterHint}
+                                    className="text-slate-900 underline hover:text-slate-600"
+                                  >
+                                    {vacancy.title}
+                                  </a>
+                                ) : (
+                                  <span>{vacancy.title}</span>
+                                )}
+                                <button
+                                  type="button"
+                                  title={appliedLabel}
+                                  onClick={() => {
+                                    onSelect(company.id)
+                                  }}
+                                  aria-label={`${appliedLabel} по вакансии ${vacancy.title}. Открыть карточку`}
+                                  className="rounded text-xs font-medium text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
                                 >
-                                  {vacancy.title}
-                                </a>
-                              ) : (
-                                <span>{vacancy.title}</span>
-                              )}
-                            </li>
-                          ))}
+                                  {appliedLabel}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onMarkApplied(company.id, vacancy.id)
+                                  }}
+                                  aria-label={`Отметка о подаче на ${vacancy.title}`}
+                                  className="rounded border border-slate-300 bg-white px-2 py-0.5 text-xs text-slate-800 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
+                                >
+                                  Отметка о подаче
+                                </button>
+                              </li>
+                            )
+                          })}
                         </ul>
                       )}
                     </td>
